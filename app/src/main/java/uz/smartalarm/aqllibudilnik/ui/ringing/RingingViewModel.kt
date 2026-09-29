@@ -66,6 +66,7 @@ class RingingViewModel(
                 label = label,
                 questions = generated,
                 currentStep = 1,
+                totalSteps = generated.size,
                 userAnswer = ""
             )
         }
@@ -117,12 +118,11 @@ class RingingViewModel(
                     it.copy(
                         isSuccess = true,
                         isError = false,
-                        feedbackMessage = "Ajoyib! Barcha misollar yechildi.",
-                        isCompleted = true
+                        feedbackMessage = "Ajoyib! Barcha 3 ta misol to‘g‘ri yechildi."
                     )
                 }
 
-                // Stop Alarm Service (audio & vibration)
+                // Stop Alarm Service immediately (audio, vibration, flashlight)
                 AlarmService.stop(context)
 
                 // Reschedule or update alarm in repository
@@ -130,6 +130,8 @@ class RingingViewModel(
                     if (state.alarmId > 0) {
                         repository.onAlarmFired(state.alarmId)
                     }
+                    delay(500)
+                    _uiState.update { it.copy(isCompleted = true) }
                 }
             } else {
                 // Move to next step

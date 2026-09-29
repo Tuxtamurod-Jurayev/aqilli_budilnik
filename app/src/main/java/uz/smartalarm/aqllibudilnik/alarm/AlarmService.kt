@@ -21,7 +21,11 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import uz.smartalarm.aqllibudilnik.R
 import uz.smartalarm.aqllibudilnik.ui.ringing.AlarmRingingActivity
 
@@ -30,6 +34,7 @@ class AlarmService : Service() {
     private var mediaPlayer: MediaPlayer? = null
     private var vibrator: Vibrator? = null
     private var flashlightHelper: FlashlightHelper? = null
+    private var volumeEnforcerJob: Job? = null
 
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
@@ -77,8 +82,9 @@ class AlarmService : Service() {
             val notification = createNotification(alarmId, label, difficulty)
             startForeground(NOTIFICATION_ID, notification)
 
-            // 1. Maximize Volume
+            // 1. Maximize Volume & Start Continuous Enforcer
             maximizeAlarmVolume()
+            startVolumeEnforcer()
 
             // 2. Start Looping Ringtone
             startRingtone()
@@ -110,6 +116,44 @@ class AlarmService : Service() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Could not set stream volume to max: ${e.message}")
+        }
+    }
+
+    private fun startVolumeEnforcer() {
+        volumeEnforcerJob?.cancel()
+        volumeEnforcerJob = serviceScope.launch(Dispatchers.Main) {
+            val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            while (isActive) {
+                try {
+                    audioManager?.let { am ->
+                        // 1. Lock Alarm stream to MAX
+                        val maxAlarm = am.getStreamMaxVolume(AudioManager.STREAM_ALARM)
+                        val curAlarm = am.getStreamVolume(AudioManager.STREAM_ALARM)
+                        if (curAlarm < maxAlarm) {
+                            am.setStreamVolume(AudioManager.STREAM_ALARM, maxAlarm, 0)
+                            Log.d(TAG, "Volume enforcer: reset STREAM_ALARM to max ($maxAlarm)")
+                        }
+
+                        // 2. Lock Music stream to MAX
+                        val maxMusic = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                        val curMusic = am.getStreamVolume(AudioManager.STREAM_MUSIC)
+                        if (curMusic < maxMusic) {
+                            am.setStreamVolume(AudioManager.STREAM_MUSIC, maxMusic, 0)
+                        }
+
+                        // 3. Lock Ring stream to MAX
+                        val maxRing = am.getStreamMaxVolume(AudioManager.STREAM_RING)
+                        val curRing = am.getStreamVolume(AudioManager.STREAM_RING)
+                        if (curRing < maxRing) {
+                            am.setStreamVolume(AudioManager.STREAM_RING, maxRing, 0)
+                        }
+                    }
+                    mediaPlayer?.setVolume(1.0f, 1.0f)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Volume enforcer error: ${e.message}")
+                }
+                delay(150)
+            }
         }
     }
 
@@ -206,6 +250,12 @@ class AlarmService : Service() {
     }
 
     private fun stopAlarm() {
+        // Stop Volume Enforcer
+        try {
+            volumeEnforcerJob?.cancel()
+            volumeEnforcerJob = null
+        } catch (_: Exception) {}
+
         // Stop Flashlight Strobe
         try {
             flashlightHelper?.stopStrobe()
