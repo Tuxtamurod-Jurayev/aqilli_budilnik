@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Aqlli Budilnik</string>
+    <string name="alarm_channel_name">Aqlli Budilnik Signali</string>
+    <string name="alarm_channel_desc">Budilnik signallari va bildirishnomalari</string>
+    <string name="alarm_notification_title">Aqlli Budilnik chalmoqda!</string>
+    <string name="alarm_notification_text">Signalni o‘chirish uchun 3 ta matematik misolni yeching.</string>
+</resources>
