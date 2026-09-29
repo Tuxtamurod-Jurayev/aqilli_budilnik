@@ -31,6 +31,7 @@ class AlarmScheduler(private val context: Context) {
             putExtra(AlarmReceiver.EXTRA_ALARM_LABEL, alarm.label)
             putExtra(AlarmReceiver.EXTRA_ALARM_DIFFICULTY, alarm.difficulty.name)
             putExtra(AlarmReceiver.EXTRA_VIBRATION, alarm.isVibrationEnabled)
+            putExtra(AlarmReceiver.EXTRA_FLASHLIGHT, alarm.isFlashlightEnabled)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(

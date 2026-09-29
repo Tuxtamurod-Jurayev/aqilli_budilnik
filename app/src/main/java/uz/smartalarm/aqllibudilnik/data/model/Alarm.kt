@@ -12,6 +12,7 @@ data class Alarm(
     val difficulty: Difficulty = Difficulty.MEDIUM,
     val questionsCount: Int = 3,
     val isVibrationEnabled: Boolean = true,
+    val isFlashlightEnabled: Boolean = true,
     val soundUri: String? = null
 ) {
     val formattedTime: String

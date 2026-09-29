@@ -1,5 +1,6 @@
 package uz.smartalarm.aqllibudilnik.ui.home.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,9 +9,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FlashOn
+import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -40,11 +47,18 @@ fun AlarmCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = if (alarm.isEnabled) {
+            BorderStroke(1.2.dp, PrimaryPurple.copy(alpha = 0.4f))
+        } else {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
+        },
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (alarm.isEnabled) 4.dp else 1.dp
+        )
     ) {
         Column(
             modifier = Modifier
@@ -62,19 +76,20 @@ fun AlarmCard(
                         text = alarm.formattedTime,
                         style = MaterialTheme.typography.displayMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            fontSize = 42.sp
+                            fontSize = 44.sp,
+                            letterSpacing = (-0.5).sp
                         ),
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
                     if (alarm.label.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = alarm.label,
                             style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.SemiBold
                             ),
-                            color = MaterialTheme.colorScheme.primary
+                            color = PrimaryPurple
                         )
                     }
                 }
@@ -98,11 +113,33 @@ fun AlarmCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = alarm.repeatDaysSummary,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = alarm.repeatDaysSummary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    if (alarm.isFlashlightEnabled) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            imageVector = Icons.Default.FlashOn,
+                            contentDescription = "Chiroq yoqilgan",
+                            tint = SecondaryTeal,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
+                    if (alarm.isVibrationEnabled) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.Vibration,
+                            contentDescription = "Vibratsiya yoqilgan",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
 
                 Surface(
                     shape = RoundedCornerShape(12.dp),

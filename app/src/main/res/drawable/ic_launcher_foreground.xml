@@ -4,14 +4,71 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Alarm clock icon -->
+
+    <!-- Outer Alarm Bells / Top Wings -->
     <path
         android:fillColor="#6C5CE7"
-        android:pathData="M54,26C38.54,26 26,38.54 26,54C26,69.46 38.54,82 54,82C69.46,82 82,69.46 82,54C82,38.54 69.46,26 54,26ZM54,76C41.85,76 32,66.15 32,54C32,41.85 41.85,32 54,32C66.15,32 76,41.85 76,54C76,66.15 66.15,76 54,76Z" />
+        android:pathData="M33,26C31,23 27,24 25,27C23,30 24,34 27,36L33,26Z" />
     <path
         android:fillColor="#00CEC9"
-        android:pathData="M52,38h4v18h12v4H52V38Z" />
+        android:pathData="M75,26C77,23 81,24 83,27C85,30 84,34 81,36L75,26Z" />
+
+    <!-- Feet -->
+    <path
+        android:fillColor="#6C5CE7"
+        android:pathData="M32,77L26,84C25,85 27,87 28,87L36,80L32,77Z" />
+    <path
+        android:fillColor="#00CEC9"
+        android:pathData="M76,77L82,84C83,85 81,87 80,87L72,80L76,77Z" />
+
+    <!-- Clock Outer Dial Rim -->
+    <path
+        android:fillColor="#6C5CE7"
+        android:pathData="M54,28C39.64,28 28,39.64 28,54C28,68.36 39.64,80 54,80C68.36,80 80,68.36 80,54C80,39.64 68.36,28 54,28ZM54,75C42.4,75 33,65.6 33,54C33,42.4 42.4,33 54,33C65.6,33 75,42.4 75,54C75,65.6 65.6,75 54,75Z" />
+
+    <!-- Clock Dial Face Center Accent -->
+    <path
+        android:fillColor="#151726"
+        android:pathData="M54,34C42.95,34 34,42.95 34,54C34,65.05 42.95,74 54,74C65.05,74 74,65.05 74,54C74,42.95 65.05,34 54,34Z" />
+
+    <!-- Clock Hands (Pointing to 07:00 with electric cyan glow) -->
+    <!-- Hour hand (towards 7 o'clock: down-left) -->
+    <path
+        android:fillColor="#00CEC9"
+        android:pathData="M52.5,54L43,62C42.2,62.8 43.2,63.8 44,63L53.5,55Z" />
+    <!-- Minute hand (towards 12 o'clock: straight up) -->
+    <path
+        android:fillColor="#00CEC9"
+        android:pathData="M52.5,39h3v15h-3z" />
+    <!-- Center Pivot Dot -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,54m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0" />
+
+    <!-- Mathematical Symbols Embossed on Clock Face -->
+    <!-- Plus symbol '+' near 2 o'clock -->
     <path
         android:fillColor="#A29BFE"
-        android:pathData="M31.2,25.6l-5.6,5.6l-4.2,-4.2l5.6,-5.6zM76.8,25.6l4.2,-4.2l5.6,5.6l-4.2,4.2z" />
+        android:pathData="M65,42h4v1.5h-4v4h-1.5v-4h-4v-1.5h4v-4h1.5z" />
+
+    <!-- Multiply symbol '×' near 10 o'clock -->
+    <path
+        android:fillColor="#A29BFE"
+        android:pathData="M40.5,41L44,44.5L42.8,45.7L39.3,42.2L35.8,45.7L34.6,44.5L38.1,41L34.6,37.5L35.8,36.3L39.3,39.8L42.8,36.3L44,37.5Z" />
+
+    <!-- Minus symbol '−' near 8 o'clock -->
+    <path
+        android:fillColor="#FF7675"
+        android:pathData="M37,64h7v1.8h-7z" />
+
+    <!-- Division symbol '÷' near 4 o'clock -->
+    <path
+        android:fillColor="#00CEC9"
+        android:pathData="M64,64h7v1.5h-7zM67.5,61.5a1,1 0,1 1,0 -0.01zM67.5,68a1,1 0,1 1,0 -0.01z" />
+
+    <!-- Little Lightning / Flash Accent at Top Center -->
+    <path
+        android:fillColor="#FFD93D"
+        android:pathData="M54,22L51,27h3.5L52.5,31L57,26h-3.5z" />
+
 </vector>

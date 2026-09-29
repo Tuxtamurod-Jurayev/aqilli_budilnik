@@ -19,6 +19,9 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import uz.smartalarm.aqllibudilnik.R
 import uz.smartalarm.aqllibudilnik.ui.ringing.AlarmRingingActivity
 
@@ -26,12 +29,17 @@ class AlarmService : Service() {
 
     private var mediaPlayer: MediaPlayer? = null
     private var vibrator: Vibrator? = null
+    private var flashlightHelper: FlashlightHelper? = null
+
+    private val serviceJob = SupervisorJob()
+    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
         initVibrator()
+        flashlightHelper = FlashlightHelper(this)
     }
 
     private fun initVibrator() {
@@ -60,6 +68,7 @@ class AlarmService : Service() {
             val label = intent.getStringExtra(AlarmReceiver.EXTRA_ALARM_LABEL) ?: ""
             val difficulty = intent.getStringExtra(AlarmReceiver.EXTRA_ALARM_DIFFICULTY) ?: "MEDIUM"
             val vibration = intent.getBooleanExtra(AlarmReceiver.EXTRA_VIBRATION, true)
+            val flashlight = intent.getBooleanExtra(AlarmReceiver.EXTRA_FLASHLIGHT, true)
 
             currentActiveAlarmId = alarmId
             currentActiveLabel = label
@@ -68,15 +77,40 @@ class AlarmService : Service() {
             val notification = createNotification(alarmId, label, difficulty)
             startForeground(NOTIFICATION_ID, notification)
 
+            // 1. Maximize Volume
+            maximizeAlarmVolume()
+
+            // 2. Start Looping Ringtone
             startRingtone()
+
+            // 3. Start Vibration
             if (vibration) {
                 startVibration()
             }
 
+            // 4. Start Flashlight Strobe Effect
+            if (flashlight) {
+                flashlightHelper?.startStrobe(serviceScope)
+            }
+
+            // 5. Open Lock Screen Alarm Activity
             launchAlarmActivity(alarmId, label, difficulty)
         }
 
         return START_STICKY
+    }
+
+    private fun maximizeAlarmVolume() {
+        try {
+            val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            audioManager?.let { am ->
+                val maxVolume = am.getStreamMaxVolume(AudioManager.STREAM_ALARM)
+                am.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0)
+                Log.d(TAG, "Alarm audio stream set to MAX volume ($maxVolume)")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Could not set stream volume to max: ${e.message}")
+        }
     }
 
     private fun createNotification(alarmId: Long, label: String, difficulty: String): Notification {
@@ -151,6 +185,7 @@ class AlarmService : Service() {
                         .setLegacyStreamType(AudioManager.STREAM_ALARM)
                         .build()
                 )
+                setVolume(1.0f, 1.0f) // Full volume on player
                 isLooping = true
                 prepare()
                 start()
@@ -171,6 +206,14 @@ class AlarmService : Service() {
     }
 
     private fun stopAlarm() {
+        // Stop Flashlight Strobe
+        try {
+            flashlightHelper?.stopStrobe()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error stopping flashlight: ${e.message}")
+        }
+
+        // Stop Audio
         try {
             mediaPlayer?.stop()
             mediaPlayer?.release()
@@ -179,6 +222,7 @@ class AlarmService : Service() {
             Log.e(TAG, "Error stopping media player: ${e.message}")
         }
 
+        // Stop Vibration
         try {
             vibrator?.cancel()
         } catch (e: Exception) {
@@ -209,6 +253,7 @@ class AlarmService : Service() {
 
     override fun onDestroy() {
         stopAlarm()
+        serviceJob.cancel()
         super.onDestroy()
     }
 

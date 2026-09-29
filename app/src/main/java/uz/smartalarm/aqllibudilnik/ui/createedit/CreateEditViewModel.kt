@@ -23,6 +23,7 @@ data class CreateEditUiState(
     val repeatDays: Set<WeekDay> = emptySet(),
     val difficulty: Difficulty = Difficulty.MEDIUM,
     val isVibrationEnabled: Boolean = true,
+    val isFlashlightEnabled: Boolean = true,
     val isSaved: Boolean = false,
     val isDeleted: Boolean = false
 )
@@ -55,7 +56,8 @@ class CreateEditViewModel(
                     label = alarm.label,
                     repeatDays = alarm.repeatDays,
                     difficulty = alarm.difficulty,
-                    isVibrationEnabled = alarm.isVibrationEnabled
+                    isVibrationEnabled = alarm.isVibrationEnabled,
+                    isFlashlightEnabled = alarm.isFlashlightEnabled
                 )
             }
         }
@@ -92,6 +94,10 @@ class CreateEditViewModel(
         _uiState.update { it.copy(isVibrationEnabled = enabled) }
     }
 
+    fun setFlashlight(enabled: Boolean) {
+        _uiState.update { it.copy(isFlashlightEnabled = enabled) }
+    }
+
     fun saveAlarm() {
         viewModelScope.launch {
             val state = _uiState.value
@@ -103,7 +109,8 @@ class CreateEditViewModel(
                 isEnabled = true,
                 repeatDays = state.repeatDays,
                 difficulty = state.difficulty,
-                isVibrationEnabled = state.isVibrationEnabled
+                isVibrationEnabled = state.isVibrationEnabled,
+                isFlashlightEnabled = state.isFlashlightEnabled
             )
 
             if (state.isEditMode) {

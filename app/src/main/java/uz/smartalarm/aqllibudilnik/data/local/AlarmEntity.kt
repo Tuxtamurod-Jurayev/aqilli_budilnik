@@ -18,6 +18,7 @@ data class AlarmEntity(
     val difficulty: Difficulty,
     val questionsCount: Int,
     val isVibrationEnabled: Boolean,
+    val isFlashlightEnabled: Boolean = true,
     val soundUri: String?
 ) {
     fun toDomain(): Alarm = Alarm(
@@ -30,6 +31,7 @@ data class AlarmEntity(
         difficulty = difficulty,
         questionsCount = questionsCount,
         isVibrationEnabled = isVibrationEnabled,
+        isFlashlightEnabled = isFlashlightEnabled,
         soundUri = soundUri
     )
 
@@ -44,6 +46,7 @@ data class AlarmEntity(
             difficulty = alarm.difficulty,
             questionsCount = alarm.questionsCount,
             isVibrationEnabled = alarm.isVibrationEnabled,
+            isFlashlightEnabled = alarm.isFlashlightEnabled,
             soundUri = alarm.soundUri
         )
     }

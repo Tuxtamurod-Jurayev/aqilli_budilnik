@@ -369,6 +369,44 @@ fun CreateEditAlarmScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Flashlight Switch
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Chiroq (Flashlight)",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Signal vaqtida kamera chirog‘i miltillashi",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    Switch(
+                        checked = uiState.isFlashlightEnabled,
+                        onCheckedChange = { viewModel.setFlashlight(it) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.surface,
+                            checkedTrackColor = SecondaryTeal
+                        )
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(32.dp))
 
             // Action Buttons

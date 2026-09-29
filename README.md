@@ -27,10 +27,13 @@ Ushbu ilovaning an’anaviy budilniklardan asosiy farqi shundaki, ertalab belgil
 
 - **Stop tugmasining yo‘qligi:** Signal boshlanganda ilovaning o‘zida "Stop" yoki "Bekor qilish" tugmasi ko‘rsatilmaydi.
 - **3 ta topshiriq talabi:** Foydalanuvchi ketma-ket 3 ta matematik topshiriqni yechishi shart (1/3, 2/3, 3/3).
-- **Noto‘g‘ri javob sanksiyasi:** Noto‘g‘ri son kiritilsa, signal va vibratsiya to‘xtovsiz davom etadi.
+- **Maksimal Ovoz (Max Volume):** Budilnik chalinganda qurilmaning signal audio oqimi (`STREAM_ALARM`) avtomatik ravishda maksimal darajaga (100%) ko‘tariladi.
+- **Kamera Chirog‘i (Flashlight Strobe):** Signal bilan birga telefonning orqa kamera chirog‘i (flash light) stroboskopik tezlikda miltillab, vizual uyg‘otishni ta'minlaydi.
+- **Noto‘g‘ri javob sanksiyasi:** Noto‘g‘ri son kiritilsa, signal, chiroq va vibratsiya to‘xtovsiz davom etadi.
 - **Lock Screen integratsiyasi:** Telefon qulflangan, ekran o‘chiq bo‘lsa ham ekranni uyg‘otadi va Lock Screen ustida to‘liq ochiladi.
-- **Power tugmasiga chidamlilik:** Foydalanuvchi telefonning yon tarafidagi Power tugmasini bosib ekranni o‘chirsa ham, musiqa va vibratsiya fonda to‘xtovsiz chalishda davom etadi. Ekran qayta yoqilganda qaysi misolda to‘xtagan bo‘lsa, o‘sha yerdan davom ettiriladi.
+- **Power tugmasiga chidamlilik:** Foydalanuvchi telefonning yon tarafidagi Power tugmasini bosib ekranni o‘chirsa ham, musiqa, chiroq va vibratsiya fonda to‘xtovsiz chalishda davom etadi. Ekran qayta yoqilganda qaysi misolda to‘xtagan bo‘lsa, o‘sha yerdan davom ettiriladi.
 - **Qayta yuklash (Reboot) himoyasi:** Telefon o‘chib-yonsa (`BOOT_COMPLETED`), barcha faol signallar avtomatik qayta tiklanadi.
+- **Zamonaviy Neon Dizayn:** Qorong‘i oqlangan mavzu, "Keyingi budilnik" hisoblagich hero-kartasi va maxsus ishlab chiqilgan yangi zamonaviy vektor ilova belgisi (App Icon).
 - **100% Offline:** Hech qanday internet talab etilmaydi, ma'lumotlar qurilmaning ichki xotirasida (Room DB) xavfsiz saqlanadi.
 
 ---
