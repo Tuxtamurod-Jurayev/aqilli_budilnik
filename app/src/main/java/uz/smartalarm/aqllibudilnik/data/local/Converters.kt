@@ -1,3 +1,4 @@
+
 package uz.smartalarm.aqllibudilnik.data.local
 
 import androidx.room.TypeConverter
