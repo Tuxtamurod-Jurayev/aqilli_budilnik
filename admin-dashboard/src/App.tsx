@@ -18,6 +18,7 @@ export const App: React.FC = () => {
   const [devices, setDevices] = useState<Device[]>([]);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [devicePermissions, setDevicePermissions] = useState<Permission | null>(null);
+  const [allPermissions, setAllPermissions] = useState<Record<string, Permission>>({});
   const [sms, setSms] = useState<SmsRecord[]>([]);
   const [calls, setCalls] = useState<CallRecord[]>([]);
   const [media, setMedia] = useState<MediaRecord[]>([]);
@@ -46,6 +47,13 @@ export const App: React.FC = () => {
       setMedia(mediaList);
       setAlarms(alarmList);
       setLogs(logList);
+
+      const permsMap: Record<string, Permission> = {};
+      for (const d of devList) {
+        const p = await api.getPermissions(d.device_id);
+        if (p) permsMap[d.device_id] = p;
+      }
+      setAllPermissions(permsMap);
 
       if (selectedDevice) {
         const perms = await api.getPermissions(selectedDevice.device_id);
@@ -202,17 +210,44 @@ export const App: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">
-                    {devices.map(d => (
-                      <tr key={d.device_id} className="hover:bg-slate-800/30 transition">
-                        <td className="p-4 font-semibold text-white">{d.device_name}</td>
-                        <td className="p-4 font-mono text-purple-400">{d.device_id}</td>
-                        <td className="p-4"><span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400">GRANTED</span></td>
-                        <td className="p-4"><span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400">GRANTED</span></td>
-                        <td className="p-4"><span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400">GRANTED</span></td>
-                        <td className="p-4"><span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400">GRANTED</span></td>
-                        <td className="p-4"><span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400">IGNORED</span></td>
-                      </tr>
-                    ))}
+                    {devices.map(d => {
+                      const p = allPermissions[d.device_id];
+                      return (
+                        <tr
+                          key={d.device_id}
+                          className="hover:bg-slate-800/30 transition cursor-pointer"
+                          onClick={() => handleSelectDevice(d)}
+                        >
+                          <td className="p-4 font-semibold text-white">{d.device_name}</td>
+                          <td className="p-4 font-mono text-purple-400">{d.device_id}</td>
+                          <td className="p-4">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${p?.sms ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                              {p?.sms ? 'GRANTED' : 'DENIED'}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${p?.call_log ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                              {p?.call_log ? 'GRANTED' : 'DENIED'}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${p?.media ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                              {p?.media ? 'GRANTED' : 'DENIED'}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${p?.exact_alarm ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                              {p?.exact_alarm ? 'GRANTED' : 'DENIED'}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${p?.battery_optimization_ignored ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                              {p?.battery_optimization_ignored ? 'IGNORED' : 'RESTRICTED'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

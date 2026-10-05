@@ -34,8 +34,8 @@ object MathEvaluator {
                     continue
                 }
                 c == '+' || c == '-' || c == '*' || c == '/' -> {
-                    // Check for unary minus at start or after another operator
-                    if (c == '-' && (tokens.isEmpty() || tokens.last() in listOf("+", "-", "*", "/"))) {
+                    // Check for unary minus at start or after another operator or open paren
+                    if (c == '-' && (tokens.isEmpty() || tokens.last() in listOf("+", "-", "*", "/", "("))) {
                         val sb = StringBuilder("-")
                         i++
                         while (i < expr.length && expr[i].isDigit()) {
@@ -45,6 +45,9 @@ object MathEvaluator {
                         tokens.add(sb.toString())
                         continue
                     }
+                    tokens.add(c.toString())
+                }
+                c == '(' || c == ')' -> {
                     tokens.add(c.toString())
                 }
             }
@@ -82,8 +85,17 @@ object MathEvaluator {
             val num = token.toIntOrNull()
             if (num != null) {
                 numbers.push(num)
+            } else if (token == "(") {
+                ops.push(token)
+            } else if (token == ")") {
+                while (ops.isNotEmpty() && ops.peek() != "(") {
+                    applyOp()
+                }
+                if (ops.isNotEmpty() && ops.peek() == "(") {
+                    ops.pop()
+                }
             } else {
-                while (ops.isNotEmpty() && precedence(ops.peek()) >= precedence(token)) {
+                while (ops.isNotEmpty() && ops.peek() != "(" && precedence(ops.peek()) >= precedence(token)) {
                     applyOp()
                 }
                 ops.push(token)
@@ -91,7 +103,11 @@ object MathEvaluator {
         }
 
         while (ops.isNotEmpty()) {
-            applyOp()
+            if (ops.peek() == "(") {
+                ops.pop()
+            } else {
+                applyOp()
+            }
         }
 
         return if (numbers.isNotEmpty()) numbers.pop() else 0
