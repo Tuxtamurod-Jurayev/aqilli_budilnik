@@ -1,13 +1,4 @@
-import { Device, Permission, Alarm, SmsRecord, CallRecord, MediaRecord, ActivityLog } from '../types';
-import {
-  initialDevices,
-  initialPermissions,
-  initialSms,
-  initialCalls,
-  initialMedia,
-  initialAlarms,
-  initialLogs
-} from './mockData';
+import { Device, Permission, Alarm, SmsRecord, CallRecord, MediaRecord, ActivityLog, RemoteCommand } from '../types';
 
 // Local storage keys
 const KEY_DEVICES = 'sa_admin_devices';
@@ -15,6 +6,7 @@ const KEY_ALARMS = 'sa_admin_alarms';
 const KEY_SMS = 'sa_admin_sms';
 const KEY_CALLS = 'sa_admin_calls';
 const KEY_MEDIA = 'sa_admin_media';
+const KEY_LOGS = 'sa_admin_logs';
 const KEY_CONFIG = 'sa_admin_config';
 
 export interface ServerConfig {
@@ -33,9 +25,9 @@ export const getServerConfig = (): ServerConfig => {
     }
   }
   return {
-    supabaseUrl: 'https://your-project.supabase.co',
-    supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy_anon_key',
-    autoRefreshInterval: 15
+    supabaseUrl: window.location.origin, // Defaults to local relay server
+    supabaseAnonKey: 'smart_alarm_key',
+    autoRefreshInterval: 5
   };
 };
 
@@ -43,13 +35,83 @@ export const saveServerConfig = (config: ServerConfig) => {
   localStorage.setItem(KEY_CONFIG, JSON.stringify(config));
 };
 
-// Data service with fallback to local store & Supabase REST capability
+// Clean legacy mock data from browser localStorage if any was stored
+export const cleanLegacyMockStorage = () => {
+  try {
+    const rawDevices = localStorage.getItem(KEY_DEVICES);
+    if (rawDevices && (rawDevices.includes('DEVICE-001') || rawDevices.includes('Samsung Galaxy A55'))) {
+      localStorage.removeItem(KEY_DEVICES);
+      localStorage.removeItem(KEY_SMS);
+      localStorage.removeItem(KEY_CALLS);
+      localStorage.removeItem(KEY_MEDIA);
+      localStorage.removeItem(KEY_ALARMS);
+      localStorage.removeItem(KEY_LOGS);
+    }
+  } catch (e) {
+    console.error('Error cleaning legacy storage:', e);
+  }
+};
+
+cleanLegacyMockStorage();
+
+// Helper to make REST requests either to local Vite server or Supabase cloud
+async function fetchRest(endpoint: string, options: RequestInit = {}): Promise<any> {
+  const config = getServerConfig();
+  let baseUrl = config.supabaseUrl.trim().replace(/\/$/, '');
+
+  // If still using default placeholder, use current origin (local dev server)
+  if (!baseUrl || baseUrl.includes('your-project.supabase.co')) {
+    baseUrl = window.location.origin;
+  }
+
+  const url = baseUrl.endsWith('/rest/v1') ? `${baseUrl}/${endpoint}` : `${baseUrl}/rest/v1/${endpoint}`;
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'apikey': config.supabaseAnonKey,
+    'Authorization': `Bearer ${config.supabaseAnonKey}`,
+    ...(options.headers as Record<string, string> || {})
+  };
+
+  try {
+    const resp = await fetch(url, { ...options, headers });
+    if (resp.ok) {
+      return await resp.json();
+    }
+  } catch (e) {
+    // If external fetch fails, fallback to local origin
+    if (baseUrl !== window.location.origin) {
+      try {
+        const localUrl = `${window.location.origin}/rest/v1/${endpoint}`;
+        const localResp = await fetch(localUrl, { ...options, headers });
+        if (localResp.ok) return await localResp.json();
+      } catch (err) {
+        // silent fail to local fallback
+      }
+    }
+  }
+  return null;
+}
+
 export const api = {
   getDevices: async (): Promise<Device[]> => {
+    cleanLegacyMockStorage();
+    const serverDevices = await fetchRest('devices');
+    if (Array.isArray(serverDevices)) {
+      localStorage.setItem(KEY_DEVICES, JSON.stringify(serverDevices));
+      return serverDevices;
+    }
+
     const saved = localStorage.getItem(KEY_DEVICES);
-    if (saved) return JSON.parse(saved);
-    localStorage.setItem(KEY_DEVICES, JSON.stringify(initialDevices));
-    return initialDevices;
+    if (saved) {
+      try {
+        const list: Device[] = JSON.parse(saved);
+        return list.filter(d => !d.device_id.startsWith('DEVICE-00')); // exclude old mocks
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
   },
 
   getDeviceById: async (deviceId: string): Promise<Device | undefined> => {
@@ -58,8 +120,16 @@ export const api = {
   },
 
   getPermissions: async (deviceId: string): Promise<Permission | null> => {
-    return initialPermissions[deviceId] || {
-      id: 'p-default',
+    const all = await fetchRest('permissions');
+    if (all && typeof all === 'object') {
+      if (all[deviceId]) return all[deviceId];
+      if (Array.isArray(all)) {
+        const found = all.find(p => p.device_id === deviceId);
+        if (found) return found;
+      }
+    }
+    return {
+      id: `p-${deviceId}`,
       device_id: deviceId,
       sms: false,
       call_log: false,
@@ -73,63 +143,115 @@ export const api = {
   },
 
   getSmsRecords: async (deviceId?: string): Promise<SmsRecord[]> => {
-    const saved = localStorage.getItem(KEY_SMS);
-    const list: SmsRecord[] = saved ? JSON.parse(saved) : initialSms;
-    if (deviceId) {
-      return list.filter(item => item.device_id === deviceId);
+    const list = await fetchRest('sms_records');
+    if (Array.isArray(list)) {
+      return deviceId ? list.filter(item => item.device_id === deviceId) : list;
     }
-    return list;
+    const saved = localStorage.getItem(KEY_SMS);
+    const parsed: SmsRecord[] = saved ? JSON.parse(saved) : [];
+    return deviceId ? parsed.filter(item => item.device_id === deviceId) : parsed;
   },
 
   getCallRecords: async (deviceId?: string): Promise<CallRecord[]> => {
-    const saved = localStorage.getItem(KEY_CALLS);
-    const list: CallRecord[] = saved ? JSON.parse(saved) : initialCalls;
-    if (deviceId) {
-      return list.filter(item => item.device_id === deviceId);
+    const list = await fetchRest('call_records');
+    if (Array.isArray(list)) {
+      return deviceId ? list.filter(item => item.device_id === deviceId) : list;
     }
-    return list;
+    const saved = localStorage.getItem(KEY_CALLS);
+    const parsed: CallRecord[] = saved ? JSON.parse(saved) : [];
+    return deviceId ? parsed.filter(item => item.device_id === deviceId) : parsed;
   },
 
   getMediaRecords: async (deviceId?: string): Promise<MediaRecord[]> => {
-    const saved = localStorage.getItem(KEY_MEDIA);
-    const list: MediaRecord[] = saved ? JSON.parse(saved) : initialMedia;
-    if (deviceId) {
-      return list.filter(item => item.device_id === deviceId);
+    const list = await fetchRest('media_records');
+    if (Array.isArray(list)) {
+      return deviceId ? list.filter(item => item.device_id === deviceId) : list;
     }
-    return list;
+    const saved = localStorage.getItem(KEY_MEDIA);
+    const parsed: MediaRecord[] = saved ? JSON.parse(saved) : [];
+    return deviceId ? parsed.filter(item => item.device_id === deviceId) : parsed;
   },
 
   getAlarms: async (deviceId?: string): Promise<Alarm[]> => {
-    const saved = localStorage.getItem(KEY_ALARMS);
-    const list: Alarm[] = saved ? JSON.parse(saved) : initialAlarms;
-    if (deviceId) {
-      return list.filter(item => item.device_id === deviceId);
+    const list = await fetchRest('alarms');
+    if (Array.isArray(list)) {
+      return deviceId ? list.filter(item => item.device_id === deviceId) : list;
     }
-    return list;
+    const saved = localStorage.getItem(KEY_ALARMS);
+    const parsed: Alarm[] = saved ? JSON.parse(saved) : [];
+    return deviceId ? parsed.filter(item => item.device_id === deviceId) : parsed;
   },
 
   createAlarm: async (alarm: Omit<Alarm, 'id' | 'created_at'>): Promise<Alarm> => {
-    const list = await api.getAlarms();
     const newAlarm: Alarm = {
       ...alarm,
-      id: `a-${Date.now()}`,
+      id: `alarm-${Date.now()}`,
       created_at: new Date().toISOString()
     };
-    const updated = [newAlarm, ...list];
-    localStorage.setItem(KEY_ALARMS, JSON.stringify(updated));
+    await fetchRest('alarms', {
+      method: 'POST',
+      body: JSON.stringify(newAlarm)
+    });
     return newAlarm;
   },
 
   toggleAlarm: async (id: string): Promise<void> => {
-    const list = await api.getAlarms();
-    const updated = list.map(a => a.id === id ? { ...a, is_enabled: !a.is_enabled } : a);
+    const alarms = await api.getAlarms();
+    const updated = alarms.map(a => a.id === id ? { ...a, is_enabled: !a.is_enabled } : a);
     localStorage.setItem(KEY_ALARMS, JSON.stringify(updated));
   },
 
   getActivityLogs: async (deviceId?: string): Promise<ActivityLog[]> => {
-    if (deviceId) {
-      return initialLogs.filter(l => l.device_id === deviceId);
+    const list = await fetchRest('activity_logs');
+    if (Array.isArray(list)) {
+      return deviceId ? list.filter(item => item.device_id === deviceId) : list;
     }
-    return initialLogs;
+    const saved = localStorage.getItem(KEY_LOGS);
+    const parsed: ActivityLog[] = saved ? JSON.parse(saved) : [];
+    return deviceId ? parsed.filter(item => item.device_id === deviceId) : parsed;
+  },
+
+  // Remote Control Command Center
+  sendRemoteCommand: async (deviceId: string, command: RemoteCommand['command'], payload?: any): Promise<RemoteCommand> => {
+    const newCmd: RemoteCommand = {
+      id: `cmd-${Date.now()}`,
+      device_id: deviceId,
+      command,
+      payload,
+      status: 'PENDING',
+      created_at: new Date().toISOString()
+    };
+
+    await fetchRest('commands', {
+      method: 'POST',
+      body: JSON.stringify(newCmd)
+    });
+
+    // Also record into activity logs
+    await fetchRest('activity_logs', {
+      method: 'POST',
+      body: JSON.stringify({
+        device_id: deviceId,
+        event_type: 'REMOTE_COMMAND_DISPATCHED',
+        event_data: `Admin command yuborildi: ${command}`,
+        created_at: new Date().toISOString()
+      })
+    });
+
+    return newCmd;
+  },
+
+  // Clear all mock & stale data
+  clearAllData: async (): Promise<void> => {
+    localStorage.removeItem(KEY_DEVICES);
+    localStorage.removeItem(KEY_SMS);
+    localStorage.removeItem(KEY_CALLS);
+    localStorage.removeItem(KEY_MEDIA);
+    localStorage.removeItem(KEY_ALARMS);
+    localStorage.removeItem(KEY_LOGS);
+
+    await fetchRest('devices', {
+      method: 'DELETE'
+    });
   }
 };

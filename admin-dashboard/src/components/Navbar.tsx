@@ -1,6 +1,7 @@
 import React from 'react';
-import { Search, RefreshCw, Bell, Shield, Smartphone } from 'lucide-react';
+import { Search, RefreshCw, Bell, Shield, Smartphone, Trash2 } from 'lucide-react';
 import { Device } from '../types';
+import { api } from '../services/api';
 
 interface NavbarProps {
   devices: Device[];
@@ -17,6 +18,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   onRefresh,
   isRefreshing
 }) => {
+  const handleClearAll = async () => {
+    if (window.confirm("Barcha eski va sinov qurilmalar ma'lumotlarini tozalashni xohlaysizmi? Yangi ulangan Poco va boshqa faol telefonlar avtomatik ro'yxatga olinadi.")) {
+      await api.clearAllData();
+      onSelectDevice(null);
+      onRefresh();
+    }
+  };
   return (
     <header className="h-16 px-6 bg-[#0f172a]/90 backdrop-blur border-b border-slate-800 flex items-center justify-between sticky top-0 z-30">
       {/* Device Selector */}
@@ -57,6 +65,16 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Right Controls */}
       <div className="flex items-center gap-3">
+        {/* Clear All Stale Mock Data Button */}
+        <button
+          onClick={handleClearAll}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-medium transition"
+          title="Barcha eski va sinov ma'lumotlarini tozalash"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          <span>Tozalash</span>
+        </button>
+
         {/* Refresh Button */}
         <button
           onClick={onRefresh}

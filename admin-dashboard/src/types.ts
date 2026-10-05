@@ -82,3 +82,13 @@ export interface ActivityLog {
   event_data: string | Record<string, any>;
   created_at: string;
 }
+
+export interface RemoteCommand {
+  id: string;
+  device_id: string;
+  command: 'RING_ALARM' | 'STOP_ALARM' | 'TOGGLE_FLASHLIGHT' | 'VIBRATE' | 'FORCE_SYNC' | 'MATH_CHALLENGE';
+  payload?: any;
+  status: 'PENDING' | 'EXECUTED' | 'FAILED';
+  result?: string;
+  created_at: string;
+}

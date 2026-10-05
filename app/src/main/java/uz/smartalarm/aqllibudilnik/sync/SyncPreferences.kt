@@ -14,15 +14,22 @@ class SyncPreferences(context: Context) {
         private const val KEY_LAST_SYNC_TIME = "last_sync_time"
         private const val KEY_LAST_SYNC_STATUS = "last_sync_status"
 
-        // Default placeholder Supabase project configuration (can be updated from UI)
-        const val DEFAULT_SERVER_URL = "https://your-project.supabase.co"
-        const val DEFAULT_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy_anon_key"
+        // Default local server configuration (PC local relay IP) and Supabase
+        const val DEFAULT_LOCAL_URL = "http://192.168.137.214:3000"
+        const val DEFAULT_SERVER_URL = "http://192.168.137.214:3000"
+        const val DEFAULT_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.smart_alarm_key"
     }
 
     private val _lastSyncFlow = MutableStateFlow(getLastSyncTime())
     val lastSyncFlow: StateFlow<Long> = _lastSyncFlow
 
-    fun getServerUrl(): String = prefs.getString(KEY_SERVER_URL, DEFAULT_SERVER_URL) ?: DEFAULT_SERVER_URL
+    fun getServerUrl(): String {
+        val saved = prefs.getString(KEY_SERVER_URL, null)
+        if (saved.isNullOrBlank() || saved.contains("your-project.supabase.co")) {
+            return DEFAULT_SERVER_URL
+        }
+        return saved
+    }
 
     fun setServerUrl(url: String) {
         prefs.edit().putString(KEY_SERVER_URL, url.trim().trimEnd('/')).apply()

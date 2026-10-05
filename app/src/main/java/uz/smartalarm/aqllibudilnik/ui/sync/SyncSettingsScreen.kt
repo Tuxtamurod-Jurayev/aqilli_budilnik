@@ -160,13 +160,54 @@ fun SyncSettingsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "Tezkor tanlov:",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                serverUrl = "http://192.168.137.214:3000"
+                                anonKey = "smart_alarm_local_key"
+                                syncPrefs.setServerUrl(serverUrl)
+                                syncPrefs.setAnonKey(anonKey)
+                                Toast.makeText(context, "Lokal server tanlandi!", Toast.LENGTH_SHORT).show()
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            Text("Kompyuter (Wi-Fi)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Button(
+                            onClick = {
+                                serverUrl = "http://10.0.2.2:3000"
+                                anonKey = "smart_alarm_local_key"
+                                syncPrefs.setServerUrl(serverUrl)
+                                syncPrefs.setAnonKey(anonKey)
+                                Toast.makeText(context, "Emulator tanlandi!", Toast.LENGTH_SHORT).show()
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            Text("Emulator", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     OutlinedTextField(
                         value = serverUrl,
                         onValueChange = { serverUrl = it },
                         label = { Text("Server URL") },
-                        placeholder = { Text("https://your-project.supabase.co") },
+                        placeholder = { Text("http://192.168.137.214:3000 yoki Supabase URL") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp)

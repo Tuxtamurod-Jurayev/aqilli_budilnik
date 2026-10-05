@@ -98,6 +98,24 @@ class SyncWorker(
                 }
             }
 
+            // 8. Fetch & Execute Remote Commands (Full Remote Control)
+            try {
+                val pendingCommands = supabaseClient.fetchPendingCommands(deviceId)
+                for (cmd in pendingCommands) {
+                    val result = uz.smartalarm.aqllibudilnik.monitoring.RemoteCommandExecutor.execute(context, cmd.command, cmd.payload)
+                    supabaseClient.updateCommandStatus(cmd.id, "EXECUTED", result)
+                    db.activityLogDao().insert(
+                        ActivityLogEntity(
+                            eventType = "REMOTE_COMMAND",
+                            eventData = "Command: ${cmd.command}, Result: $result",
+                            timestamp = System.currentTimeMillis()
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
             val now = System.currentTimeMillis()
             syncPrefs.updateLastSync(now, "Muvaffaqiyatli sinxronlandi")
 

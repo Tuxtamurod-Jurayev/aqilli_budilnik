@@ -16,9 +16,15 @@ import {
   Search,
   Plus,
   Play,
-  RotateCcw
+  RotateCcw,
+  Bell,
+  BellOff,
+  Zap,
+  RefreshCw,
+  Flame
 } from 'lucide-react';
-import { Device, Permission, Alarm, SmsRecord, CallRecord, MediaRecord, ActivityLog } from '../types';
+import { Device, Permission, Alarm, SmsRecord, CallRecord, MediaRecord, ActivityLog, RemoteCommand } from '../types';
+import { api } from '../services/api';
 
 interface DeviceDetailPageProps {
   device: Device;
@@ -54,6 +60,24 @@ export const DeviceDetailPage: React.FC<DeviceDetailPageProps> = ({
   const [newAlarmTime, setNewAlarmTime] = useState('07:30');
   const [newAlarmLabel, setNewAlarmLabel] = useState('Ertalabki uyg\'onish');
   const [newAlarmDifficulty, setNewAlarmDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
+
+  // Remote Control state
+  const [commandFeedback, setCommandFeedback] = useState<string | null>(null);
+  const [isExecutingCmd, setIsExecutingCmd] = useState(false);
+
+  const handleSendCommand = async (cmd: RemoteCommand['command'], label: string) => {
+    setIsExecutingCmd(true);
+    setCommandFeedback(`${label} buyrug'i qurilmaga yuborilmoqda...`);
+    try {
+      await api.sendRemoteCommand(device.device_id, cmd);
+      setCommandFeedback(`✓ "${label}" buyrug'i muvaffaqiyatli yuborildi!`);
+      setTimeout(() => setCommandFeedback(null), 3500);
+    } catch (e) {
+      setCommandFeedback(`Xatolik: ${e}`);
+    } finally {
+      setIsExecutingCmd(false);
+    }
+  };
 
   const filteredSms = sms.filter(s =>
     s.address.toLowerCase().includes(smsSearch.toLowerCase()) ||
@@ -137,7 +161,93 @@ export const DeviceDetailPage: React.FC<DeviceDetailPageProps> = ({
 
       {/* TAB CONTENT: 1. OVERVIEW */}
       {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="space-y-6">
+          {/* Remote Command Control Center */}
+          <div className="p-6 rounded-2xl bg-gradient-to-r from-purple-950/40 via-slate-900 to-indigo-950/30 border border-purple-500/30 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-purple-500/20 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center">
+                  <Zap className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white font-['Outfit'] flex items-center gap-2">
+                    Masofadan To'liq Boshqarish Pulti (MDM Control Center)
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                      FAOL
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Qurilmaga to'g'ridan-to'g'ri masofaviy buyruqlar yuborish va harakatlarni darhol ishga tushirish
+                  </p>
+                </div>
+              </div>
+
+              {commandFeedback && (
+                <div className="px-3.5 py-1.5 rounded-xl bg-purple-500/20 border border-purple-500/40 text-xs font-semibold text-purple-200 animate-pulse">
+                  {commandFeedback}
+                </div>
+              )}
+            </div>
+
+            {/* Quick Action Control Buttons */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              <button
+                disabled={isExecutingCmd}
+                onClick={() => handleSendCommand('RING_ALARM', 'Budilnikni Jiringlatish')}
+                className="p-3.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 font-semibold text-xs flex flex-col items-center justify-center gap-2 transition hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+              >
+                <Bell className="w-5 h-5 text-rose-400" />
+                <span>Budilnikni Yoqish</span>
+              </button>
+
+              <button
+                disabled={isExecutingCmd}
+                onClick={() => handleSendCommand('STOP_ALARM', 'Budilnikni To\'xtatish')}
+                className="p-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs flex flex-col items-center justify-center gap-2 transition hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+              >
+                <BellOff className="w-5 h-5 text-slate-400" />
+                <span>O'chirish</span>
+              </button>
+
+              <button
+                disabled={isExecutingCmd}
+                onClick={() => handleSendCommand('TOGGLE_FLASHLIGHT', 'Fonar (Chiroq)')}
+                className="p-3.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-semibold text-xs flex flex-col items-center justify-center gap-2 transition hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+              >
+                <Zap className="w-5 h-5 text-amber-400" />
+                <span>Fonarni Yoqish</span>
+              </button>
+
+              <button
+                disabled={isExecutingCmd}
+                onClick={() => handleSendCommand('VIBRATE', 'Vibratsiya')}
+                className="p-3.5 rounded-xl bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/30 text-teal-300 font-semibold text-xs flex flex-col items-center justify-center gap-2 transition hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+              >
+                <RotateCcw className="w-5 h-5 text-teal-400" />
+                <span>Titratish (3s)</span>
+              </button>
+
+              <button
+                disabled={isExecutingCmd}
+                onClick={() => handleSendCommand('FORCE_SYNC', 'Darhol Sinxronlash')}
+                className="p-3.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-semibold text-xs flex flex-col items-center justify-center gap-2 transition hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+              >
+                <RefreshCw className="w-5 h-5 text-indigo-400" />
+                <span>Darhol Sync</span>
+              </button>
+
+              <button
+                disabled={isExecutingCmd}
+                onClick={() => handleSendCommand('MATH_CHALLENGE', 'Matematika Sinovi')}
+                className="p-3.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 font-semibold text-xs flex flex-col items-center justify-center gap-2 transition hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+              >
+                <Flame className="w-5 h-5 text-purple-400" />
+                <span>Matematik Sinov</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {/* Hardware & System */}
           <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3">
             <h4 className="font-bold text-sm text-white font-['Outfit'] border-b border-slate-800 pb-2">
@@ -225,7 +335,8 @@ export const DeviceDetailPage: React.FC<DeviceDetailPageProps> = ({
             </div>
           </div>
         </div>
-      )}
+      </div>
+    )}
 
       {/* TAB CONTENT: 2. SMS */}
       {activeTab === 'sms' && (

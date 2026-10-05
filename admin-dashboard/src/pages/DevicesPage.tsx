@@ -87,7 +87,40 @@ export const DevicesPage: React.FC<DevicesPageProps> = ({ devices, onSelectDevic
       </div>
 
       {/* Device Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {filtered.length === 0 ? (
+        <div className="p-10 rounded-2xl bg-slate-900/60 border border-slate-800 text-center max-w-xl mx-auto space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-purple-500/10 text-purple-400 mx-auto flex items-center justify-center">
+            <Smartphone className="w-7 h-7" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-white font-['Outfit']">
+              Hozircha Faol Qurilma Ulanmagan
+            </h3>
+            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+              Eski test qurilmalar tozalandi. Yangi Poco yoki boshqa telefoningizni ulash uchun ilovani oching:
+            </p>
+          </div>
+
+          <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 text-left text-xs space-y-2.5 text-slate-300">
+            <div className="flex items-start gap-2.5">
+              <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center font-bold text-[11px] shrink-0">1</span>
+              <span>Poco telefoningizda yangi yig'ilgan <strong>AqlliBudilnik-debug.apk</strong> faylini oching.</span>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center font-bold text-[11px] shrink-0">2</span>
+              <span>Yuqoridagi <strong>Sozlamalar</strong> tugmasini bosing va <strong>"Kompyuter (Wi-Fi)"</strong> yoki quyidagi server manzilini tanlang:</span>
+            </div>
+            <div className="p-2.5 rounded bg-slate-950 font-mono text-[11px] text-purple-400 text-center select-all border border-slate-800 font-semibold">
+              http://192.168.137.214:3000
+            </div>
+            <div className="flex items-start gap-2.5">
+              <span className="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center font-bold text-[11px] shrink-0">3</span>
+              <span><strong>"Hozir tekshirish va sinxronlash"</strong> tugmasini bosing. Qurilma ushbu panelda darhol paydo bo'ladi!</span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filtered.map((device) => (
           <div
             key={device.device_id}
@@ -162,6 +195,7 @@ export const DevicesPage: React.FC<DevicesPageProps> = ({ devices, onSelectDevic
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 };
