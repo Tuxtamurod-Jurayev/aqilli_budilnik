@@ -162,3 +162,9 @@ Brauzerda `http://localhost:3000` manzilini oching.
 1. [supabase.com](https://supabase.com) saytida yangi bepul loyiha yarating.
 2. SQL Editor bo'limiga kirib, `supabase/schema.sql` fayli tarkibini joylang va **Run** tugmasini bosing.
 3. Loyiha URL va Anon kalitini Android ilova sozlamalariga yoki Web panelga kiriting.
+
+### 4. Admin Panelni Vercel orqali bepul tarmoqqa chiqarish (Deploy to Vercel)
+1. [vercel.com](https://vercel.com) saytiga kiring va GitHub profilingiz orqali kiring.
+2. **"Add New Project"** tugmasini bosing va `secret_app` repozitoriyasini tanlang (**Import**).
+3. Vercel loyihani avtomatik taniydi (`vercel.json` tayyorlangan).
+4. **"Deploy"** tugmasini bosing. Bir necha soniya ichida admin panel global internet tarmog'ida jonli ishga tushadi!
