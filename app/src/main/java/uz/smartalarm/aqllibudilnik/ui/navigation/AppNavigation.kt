@@ -29,6 +29,9 @@ fun AppNavigation(
                 },
                 onNavigateToSettings = {
                     navController.navigate(Screen.Settings.route)
+                },
+                onNavigateToDevice = {
+                    navController.navigate(Screen.Device.route)
                 }
             )
         }
@@ -61,7 +64,36 @@ fun AppNavigation(
             SettingsScreen(
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onNavigateToDevice = {
+                    navController.navigate(Screen.Device.route)
+                },
+                onNavigateToPermissions = {
+                    navController.navigate(Screen.Permissions.route)
+                },
+                onNavigateToSyncSettings = {
+                    navController.navigate(Screen.SyncSettings.route)
                 }
+            )
+        }
+
+        composable(Screen.Device.route) {
+            uz.smartalarm.aqllibudilnik.ui.device.DeviceScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPermissions = { navController.navigate(Screen.Permissions.route) },
+                onNavigateToSyncSettings = { navController.navigate(Screen.SyncSettings.route) }
+            )
+        }
+
+        composable(Screen.Permissions.route) {
+            uz.smartalarm.aqllibudilnik.ui.permissions.PermissionManagerScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.SyncSettings.route) {
+            uz.smartalarm.aqllibudilnik.ui.sync.SyncSettingsScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

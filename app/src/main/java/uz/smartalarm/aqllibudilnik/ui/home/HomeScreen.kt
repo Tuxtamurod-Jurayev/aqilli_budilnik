@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -50,6 +51,7 @@ fun HomeScreen(
     onNavigateToCreate: () -> Unit,
     onNavigateToEdit: (Long) -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToDevice: () -> Unit = {},
     viewModel: HomeViewModel = viewModel()
 ) {
     val alarms by viewModel.alarms.collectAsState()
@@ -105,17 +107,32 @@ fun HomeScreen(
                     )
                 }
 
-                IconButton(
-                    onClick = onNavigateToSettings,
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surface, CircleShape)
-                        .size(44.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "Sozlamalar",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    IconButton(
+                        onClick = onNavigateToDevice,
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.surface, CircleShape)
+                            .size(44.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PhoneAndroid,
+                            contentDescription = "Qurilma va Monitoring",
+                            tint = PrimaryPurple
+                        )
+                    }
+
+                    IconButton(
+                        onClick = onNavigateToSettings,
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.surface, CircleShape)
+                            .size(44.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Sozlamalar",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 

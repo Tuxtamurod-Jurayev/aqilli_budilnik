@@ -45,6 +45,9 @@ import uz.smartalarm.aqllibudilnik.ui.theme.SecondaryTeal
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToDevice: () -> Unit = {},
+    onNavigateToPermissions: () -> Unit = {},
+    onNavigateToSyncSettings: () -> Unit = {},
     viewModel: SettingsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -77,6 +80,99 @@ fun SettingsScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
+            // Device Management Card
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Qurilma va Boshqaruv (Management)",
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                        color = PrimaryPurple
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    // Device Telemetry
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onNavigateToDevice() }
+                            .padding(vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Qurilma holati va Telemetriya",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Batareya, tarmoq, device ID va online status",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Text(">", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.outline)
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Permissions Manager
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onNavigateToPermissions() }
+                            .padding(vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Ruxsatlar markazi (Permissions)",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "SMS, qo'ng'iroqlar, galereya va tizim ruxsatlari",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = SecondaryTeal
+                            )
+                        }
+                        Text(">", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.outline)
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Server & Sync
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onNavigateToSyncSettings() }
+                            .padding(vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Server va Sinxronizatsiya",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Supabase backend, API sozlamalari",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Text(">", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.outline)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             // General Settings Card
             Card(
                 shape = RoundedCornerShape(20.dp),

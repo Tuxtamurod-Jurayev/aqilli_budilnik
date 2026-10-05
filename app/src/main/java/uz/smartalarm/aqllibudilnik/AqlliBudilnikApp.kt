@@ -30,6 +30,7 @@ class AqlliBudilnikApp : Application() {
         alarmRepository = AlarmRepository(database.alarmDao(), alarmScheduler)
 
         createNotificationChannel()
+        uz.smartalarm.aqllibudilnik.sync.SyncScheduler.schedulePeriodicSync(this)
     }
 
     private fun createNotificationChannel() {

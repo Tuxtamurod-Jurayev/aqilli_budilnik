@@ -7,4 +7,7 @@ sealed class Screen(val route: String) {
         fun createRoute(alarmId: Long) = "edit_alarm/$alarmId"
     }
     data object Settings : Screen("settings")
+    data object Device : Screen("device")
+    data object Permissions : Screen("permissions")
+    data object SyncSettings : Screen("sync_settings")
 }

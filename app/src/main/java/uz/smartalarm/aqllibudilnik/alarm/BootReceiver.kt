@@ -29,6 +29,8 @@ class BootReceiver : BroadcastReceiver() {
                         scheduler.schedule(entity.toDomain())
                         Log.d(TAG, "Rescheduled alarm ${entity.id} after reboot")
                     }
+                    uz.smartalarm.aqllibudilnik.sync.SyncScheduler.schedulePeriodicSync(context)
+                    uz.smartalarm.aqllibudilnik.sync.SyncScheduler.triggerImmediateSync(context)
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to reschedule alarms on boot: ${e.message}")
                 } finally {

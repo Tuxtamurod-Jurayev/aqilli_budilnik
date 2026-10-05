@@ -8,3 +8,5 @@ app/build/
 **/build/
 .externalNativeBuild
 .cxx
+admin-dashboard/node_modules/
+admin-dashboard/dist/
